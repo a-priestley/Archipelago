@@ -2,17 +2,26 @@
 
 If you just want to play and there is a compiled version available on the [Archipelago releases page](https://github.com/ArchipelagoMW/Archipelago/releases), use that version.
 To build the full Archipelago software stack, refer to [Running From Source](running%20from%20source.md).
-Follow these steps to build and deploy a containerized instance of the web host software, optionally integrating [Gunicorn](https://gunicorn.org/) WSGI HTTP Server running behind the [nginx](https://nginx.org/) reverse proxy.
+Follow these steps to deploy a containerized instance of the web host software, optionally integrating [Gunicorn](https://gunicorn.org/) WSGI HTTP Server running behind the [nginx](https://nginx.org/) reverse proxy.
 
 
-## Building the Container Image
-
-What you'll need:
+## What You'll Need:
  * A container runtime engine such as:
-   * [Docker](https://www.docker.com/) (Version 23.0 or later)
-   * [Podman](https://podman.io/) (version 4.0 or later)
+   * [Docker](https://www.docker.com/) (Requires version 23.0 or later if building from source)
+   * [Podman](https://podman.io/) (Requires version 4.0 or later if building from source)
      * For running with rootless podman, you need to ensure all ports used are usable rootless, by default ports less than 1024 are root only. See [the official tutorial](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for details.
- * The Docker Buildx plugin (for Docker), as the Dockerfile uses `$TARGETARCH` for architecture detection. Follow [Docker's guide](https://docs.docker.com/build/buildx/install/). Verify with `docker buildx version`.
+ * If building from source, the Docker Buildx plugin (for Docker), as the Dockerfile uses `$TARGETARCH` for architecture detection. Follow [Docker's guide](https://docs.docker.com/build/buildx/install/). Verify with `docker buildx version`.
+
+
+## Pulling the Container Image
+
+The latest images are available to be pulled from `ghcr.io/archipelagomw` using the command:
+`docker pull ghcr.io/archipelagomw/archipelago:latest`
+Or:
+`podman pull ghcr.io/archipelagomw/archipelago:latest`
+
+
+## Optional: Building the Container Image from Source
 
 Starting from the root repository directory, the standalone Archipelago image can be built and run with the command:
 `docker build -t archipelago .`
