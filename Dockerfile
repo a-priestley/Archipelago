@@ -97,4 +97,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Ensure no runtime ModuleUpdate.
 ENV SKIP_REQUIREMENTS_UPDATE=true
 
+#Test comment
+
 ENTRYPOINT [ "python", "WebHost.py" ]
