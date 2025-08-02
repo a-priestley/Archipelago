@@ -20,6 +20,7 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
 
 # Cython builder stage
 FROM python:3.12 AS cython-builder
+ENV PYTHONWARNINGS=ignore
 
 WORKDIR /build
 
@@ -28,7 +29,7 @@ COPY requirements.txt WebHostLib/requirements.txt
 
 RUN pip install --no-cache-dir -r \
     WebHostLib/requirements.txt \
-    setuptools
+    "setuptools<81"
 
 COPY _speedups.pyx .
 COPY intset.h .
@@ -40,6 +41,7 @@ FROM python:3.12-slim AS archipelago
 ARG TARGETARCH
 ENV VIRTUAL_ENV=/opt/venv
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONWARNINGS=ignore
 WORKDIR /app
 
 # Install requirements
