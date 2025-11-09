@@ -11,7 +11,7 @@ on:
       - "!.github/workflows/**"
       - ".github/workflows/docker.yml"
     branches:
-      - "*"
+      - "main"
     tags:
       - "v?[0-9]+.[0-9]+.[0-9]*"
   workflow_dispatch:
@@ -151,4 +151,59 @@ jobs:
               "$tag-arm64"
             
             docker manifest push "$tag"
+          done
+
+  cleanup:
+    needs: [prepare, manifest]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine owner type
+        id: owner-type
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          owner="${{ github.repository_owner }}"
+
+          # Check if owner is an organization
+          response=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/orgs/$owner" -w "%{http_code}")
+
+          status="${response: -3}"
+          if [[ "$status" == "200" ]]; then
+            echo "type=org" >> $GITHUB_OUTPUT
+            echo "base_path=/orgs/$owner/packages" >> $GITHUB_OUTPUT
+          else
+            echo "type=user" >> $GITHUB_OUTPUT
+            echo "base_path=/users/$owner/packages" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Delete platform-specific images
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          readarray -t tag_array <<< "${{ needs.prepare.outputs.tags }}"
+
+          base_path="${{ steps.owner-type.outputs.base_path }}"
+          package_name="${{ needs.prepare.outputs.package-name }}"
+
+          for tag in "${tag_array[@]}"; do
+            amd64_tag="${tag}-amd64"
+            arm64_tag="${tag}-arm64"
+            
+            echo "Deleting $amd64_tag"
+            gh api \
+              --method DELETE \
+              "$base_path/container/$package_name/versions" \
+              -F "tag=$amd64_tag" || echo "Failed to delete $amd64_tag (may not exist)"
+            
+            echo "Deleting $arm64_tag"
+            gh api \
+              --method DELETE \
+              "$base_path/container/$package_name/versions" \
+              -F "tag=$arm64_tag" || echo "Failed to delete $arm64_tag (may not exist)"
           done
